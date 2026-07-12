@@ -11,12 +11,8 @@ baseurl: ""
 # Your production URL
 url: "https://talltechguy.github.io"
 
-# Use a GitHub Pages supported theme
-# You can use a gem-based theme (built into GitHub Pages):
-theme: jekyll-theme-minimal
-
-# Or use a remote theme hosted on GitHub by uncommenting and editing the line below:
-# remote_theme: owner/repo  # e.g. remote_theme: pages-themes/minimal@v0.2.0
+# Use the Bright Grid theme from PageThemes-Jekyll
+remote_theme: TallTechGuy/PageThemes-Jekyll/bright-grid
 
 # To enable remote themes, add the jekyll-remote-theme plugin below. Leave the
 # plugins list empty if you only use built-in theme gems.
