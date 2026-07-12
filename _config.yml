@@ -11,8 +11,8 @@ baseurl: ""
 # Your production URL
 url: "https://talltechguy.github.io"
 
-# Use the Bright Grid theme from PageThemes-Jekyll
-remote_theme: TallTechGuy/PageThemes-Jekyll/bright-grid
+# Use the Bright Grids theme from PageThemes-Jekyll
+remote_theme: TallTechGuy/PageThemes-Jekyll/bright-grids
 
 # To enable remote themes, add the jekyll-remote-theme plugin below. Leave the
 # plugins list empty if you only use built-in theme gems.
