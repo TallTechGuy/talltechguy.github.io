@@ -12,10 +12,16 @@ baseurl: ""
 url: "https://talltechguy.github.io"
 
 # Use a GitHub Pages supported theme
+# You can use a gem-based theme (built into GitHub Pages):
 theme: jekyll-theme-minimal
 
-# Plugins - leave empty for GitHub Pages build, add jekyll-remote-theme if using remote themes
-plugins: []
+# Or use a remote theme hosted on GitHub by uncommenting and editing the line below:
+# remote_theme: owner/repo  # e.g. remote_theme: pages-themes/minimal@v0.2.0
+
+# To enable remote themes, add the jekyll-remote-theme plugin below. Leave the
+# plugins list empty if you only use built-in theme gems.
+plugins:
+  - jekyll-remote-theme
 
 # Markdown processor
 markdown: kramdown
