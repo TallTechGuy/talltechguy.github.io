@@ -1,0 +1,27 @@
+# Jekyll site configuration for TallTechGuy
+# Basic settings - update title, email, and description as desired
+
+title: TallTechGuy
+email: you@example.com
+description: >-
+  Personal website for TallTechGuy
+
+# If your site is served from https://TallTechGuy.github.io leave baseurl empty
+baseurl: ""
+# Your production URL
+url: "https://talltechguy.github.io"
+
+# Use a GitHub Pages supported theme
+theme: jekyll-theme-minimal
+
+# Plugins - leave empty for GitHub Pages build, add jekyll-remote-theme if using remote themes
+plugins: []
+
+# Markdown processor
+markdown: kramdown
+
+# Exclude these files from the build
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
