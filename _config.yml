@@ -1,24 +1,14 @@
 ---
-# Jekyll site configuration for TallTechGuy
-# Basic settings - update title, email, and description as desired
-
 title: TallTechGuy
 email: you@example.com
 description: >-
   Personal website for TallTechGuy
 
-# If your site is served from https://TallTechGuy.github.io leave baseurl empty
 baseurl: ""
-# Your production URL
 url: "https://talltechguy.github.io"
 
-# Theme is installed locally in the repo. Remove remote_theme.
-# remote_theme: TallTechGuy/PageThemes-Jekyll/bright-grids
-
-# To enable remote themes, add the jekyll-remote-theme plugin below. Leave the
-# plugins list empty if you only use built-in theme gems.
-plugins:
-  - jekyll-remote-theme
+# Use the minimal Jekyll theme
+theme: jekyll-theme-minimal
 
 # Markdown processor
 markdown: kramdown
