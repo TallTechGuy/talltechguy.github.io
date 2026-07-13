@@ -1,3 +1,4 @@
+---
 # Jekyll site configuration for TallTechGuy
 # Basic settings - update title, email, and description as desired
 
@@ -11,8 +12,8 @@ baseurl: ""
 # Your production URL
 url: "https://talltechguy.github.io"
 
-# Use the Bright Grids theme from PageThemes-Jekyll
-remote_theme: TallTechGuy/PageThemes-Jekyll/bright-grids
+# Theme is installed locally in the repo. Remove remote_theme.
+# remote_theme: TallTechGuy/PageThemes-Jekyll/bright-grids
 
 # To enable remote themes, add the jekyll-remote-theme plugin below. Leave the
 # plugins list empty if you only use built-in theme gems.
