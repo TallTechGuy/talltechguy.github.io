@@ -1,0 +1,14 @@
+---
+layout: default
+---
+<article class="wrap post">
+  <a href="{{ '/blog/' | relative_url }}" class="back-link">&larr; all posts</a>
+  <div class="post-meta">
+    {{ page.date | date: "%B %d, %Y" }}
+    {% if page.tags %} · {{ page.tags | join: ", " }}{% endif %}
+  </div>
+  <h1>{{ page.title }}</h1>
+  <div class="prose post-content">
+    {{ content }}
+  </div>
+</article>

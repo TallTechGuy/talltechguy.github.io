@@ -1,0 +1,146 @@
+---
+layout: default
+---
+<header class="wrap hero">
+  <div>
+    <span class="tag">IT · CYBERSECURITY · AI GOVERNANCE</span>
+    <h1>I build the systems I'd trust to protect my own family.</h1>
+    <p class="lede">Practical IT, real security, and AI governance done carefully &mdash; explained in plain language, by someone who genuinely enjoys the work.</p>
+    <div class="hero-ctas">
+      <a href="{{ '/about/' | relative_url }}" class="btn btn-primary">About me</a>
+      <a href="{{ '/#projects' | relative_url }}" class="btn btn-ghost">See what I'm building</a>
+    </div>
+  </div>
+
+  <div class="now-panel">
+    <div class="now-head">Right now</div>
+    <div class="now-row">
+      <span class="now-dot"></span>
+      <div class="now-text">
+        <div class="now-label">Studying</div>
+        <div class="now-value">IAPP AIGP certification</div>
+      </div>
+    </div>
+    <div class="now-row">
+      <span class="now-dot"></span>
+      <div class="now-text">
+        <div class="now-label">Building</div>
+        <div class="now-value">AIGP or Bust — a retro study game</div>
+      </div>
+    </div>
+    <div class="now-row">
+      <span class="now-dot"></span>
+      <div class="now-text">
+        <div class="now-label">Also exploring</div>
+        <div class="now-value">CompTIA SecAI+ prep</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="credentials-strip">
+  <div class="wrap">
+    <div class="cred-label">Credentials</div>
+    <div class="cred-row">
+      <span class="cred-pill">BS, IT &amp; Cybersecurity — SNHU</span>
+      <span class="cred-pill">CompTIA Security+</span>
+      <span class="cred-pill">CompTIA Network+</span>
+      <span class="cred-pill in-progress">IAPP AIGP — In Progress</span>
+      <span class="cred-pill in-progress">CompTIA SecAI+ — In Progress</span>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">WHAT I DO</span>
+      <h2>Three things I take seriously</h2>
+      <p>The day-to-day work that keeps an organization running, secure, and using AI responsibly.</p>
+    </div>
+    <div class="card-grid">
+      <div class="card"><span class="tag">SYS</span><h3>IT Systems</h3><p>Networking, AV, POS systems, and vendor management — infrastructure nobody notices until it breaks.</p></div>
+      <div class="card"><span class="tag">SEC</span><h3>Cybersecurity</h3><p>PCI DSS compliance and practical hardening — protection that doesn't get in people's way.</p></div>
+      <div class="card"><span class="tag">GOV</span><h3>AI Governance</h3><p>Policies and frameworks that help organizations use AI with clear eyes, not blind trust.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">PROJECTS</span>
+      <h2>Things I've actually built</h2>
+      <p>Not just talk — tools and systems built for real use, from a full IT helpdesk agent to the study games below.</p>
+    </div>
+    <div class="project-grid">
+      <div class="project-card">
+        <h3>AI Governance Documentation Suite</h3>
+        <p>Usage policies, AI Impact Assessments, and employee adoption surveys built from scratch to guide a real organization's AI rollout.</p>
+        <div class="project-tags">
+          <span class="project-tag">AI Governance</span>
+          <span class="project-tag">Policy Writing</span>
+          <span class="project-tag">EU AI Act</span>
+        </div>
+        <a href="#" class="project-link">View project</a>
+      </div>
+      <div class="project-card">
+        <h3>IT Helpdesk AI Agent</h3>
+        <p>A Microsoft Copilot Studio agent with automated escalation workflows and self-generating knowledge base emails.</p>
+        <div class="project-tags">
+          <span class="project-tag">Copilot Studio</span>
+          <span class="project-tag">Power Automate</span>
+          <span class="project-tag">IT Ops</span>
+        </div>
+        <a href="#" class="project-link">View project</a>
+      </div>
+      <div class="project-card">
+        <h3>AIGP Quest &amp; AIGP or Bust</h3>
+        <p>Two retro-style study games built to get through AIGP certification prep &mdash; now open for anyone studying the same material.</p>
+        <div class="project-tags">
+          <span class="project-tag">HTML/CSS/JS</span>
+          <span class="project-tag">Retro Design</span>
+          <span class="project-tag">Self-hosted</span>
+        </div>
+        <a href="{{ '/games/' | relative_url }}" class="project-link">Play the games</a>
+      </div>
+      <div class="project-card">
+        <h3>Full Network &amp; Access Point Refresh</h3>
+        <p>Led a full wireless infrastructure overhaul across a multi-building campus, including a new device naming convention from the ground up.</p>
+        <div class="project-tags">
+          <span class="project-tag">Networking</span>
+          <span class="project-tag">Ruckus</span>
+          <span class="project-tag">Infrastructure</span>
+        </div>
+        <a href="#" class="project-link">View project</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="writing">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">LATEST</span>
+      <h2>Notes from the field</h2>
+      <p>Study notes, governance breakdowns, and IT lessons, turned into plain-language posts as I go.</p>
+    </div>
+    <div class="post-list">
+      {% for post in site.posts limit:6 %}
+      <a class="post-row" href="{{ post.url | relative_url }}">
+        <span class="post-date">{{ post.date | date: "%b %d, %Y" }}</span>
+        <span class="post-title">{{ post.title }}</span>
+        <span class="post-arrow">&rarr;</span>
+      </a>
+      {% endfor %}
+      {% if site.posts.size == 0 %}
+      <p class="empty-note">No posts yet &mdash; add a markdown file to <code>_posts/</code> and it'll show up here.</p>
+      {% endif %}
+    </div>
+    {% if site.posts.size > 6 %}
+    <a href="{{ '/blog/' | relative_url }}" class="btn btn-ghost" style="margin-top:24px;">See all posts</a>
+    {% endif %}
+  </div>
+</section>
+
+{{ content }}

@@ -1,0 +1,55 @@
+---
+layout: default
+---
+<header class="wrap hero">
+  <div>
+    <div class="eyebrow">ryan@talltechguy:~$ whoami<span class="cursor"></span></div>
+    <h1>I keep systems<br>running &mdash; and <em>people</em><br>protected.</h1>
+    <p class="lede">IT, cybersecurity, and AI governance, built the plain-language way. No jargon, no over-engineering &mdash; just things that work and hold up under an audit.</p>
+    <div class="hero-ctas">
+      <a href="{{ '/about/' | relative_url }}" class="btn btn-primary">About me</a>
+      <a href="{{ '/games/' | relative_url }}" class="btn btn-ghost">Play the study games</a>
+    </div>
+  </div>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span class="terminal-title">ryan@talltechguy</span>
+    </div>
+    <div class="terminal-body">
+      <div class="line"><span class="prompt">$</span> <span class="cmd">whoami</span></div>
+      <div class="line out">ryan bogs — IT &amp; cybersecurity manager</div>
+      <div class="gap"></div>
+      <div class="line"><span class="prompt">$</span> <span class="cmd">status</span></div>
+      <div class="line status">[ ALL SYSTEMS OPERATIONAL ]</div>
+    </div>
+  </div>
+</header>
+
+<section id="writing">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">[ LATEST ]</span>
+      <h2>Notes from the field</h2>
+      <p>Study notes, governance breakdowns, and IT lessons, turned into plain-language posts as I go.</p>
+    </div>
+    <div class="post-list">
+      {% for post in site.posts limit:6 %}
+      <a class="post-row" href="{{ post.url | relative_url }}">
+        <span class="post-date mono">{{ post.date | date: "%b %d, %Y" }}</span>
+        <span class="post-title">{{ post.title }}</span>
+        <span class="post-arrow">&rarr;</span>
+      </a>
+      {% endfor %}
+      {% if site.posts.size == 0 %}
+      <p class="empty-note">No posts yet &mdash; add a markdown file to <code>_posts/</code> and it'll show up here.</p>
+      {% endif %}
+    </div>
+    {% if site.posts.size > 6 %}
+    <a href="{{ '/blog/' | relative_url }}" class="btn btn-ghost" style="margin-top:24px;">See all posts</a>
+    {% endif %}
+  </div>
+</section>
+
+{{ content }}

@@ -1,21 +1,36 @@
----
 title: TallTechGuy
-email: you@example.com
-description: >-
-  Personal website for TallTechGuy
+description: "IT, cybersecurity, and AI governance — built the plain-language way."
+author: Ryan Bogs
 
+# IMPORTANT: update this to match your actual GitHub Pages URL before publishing.
+# If this repo is named yourusername.github.io -> url: "https://yourusername.github.io" and baseurl: ""
+# If this repo has any other name -> url: "https://yourusername.github.io" and baseurl: "/repo-name"
+url: "https://yourusername.github.io"
 baseurl: ""
-url: "https://talltechguy.github.io"
 
-# Use the minimal Jekyll theme
-theme: jekyll-theme-minimal
-remote_theme: pages-themes/minimal@v0.2.0
-
-# Markdown processor
 markdown: kramdown
+permalink: /blog/:title/
 
-# Exclude these files from the build
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "page"
+
 exclude:
-  - README.md
   - Gemfile
   - Gemfile.lock
+  - README.md
+  - vendor
+  - _theme-concepts
