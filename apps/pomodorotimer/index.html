@@ -1,81 +1,611 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pomodoro Timer</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            min-width: 300px;
-        }
-        
-        h1 {
-            color: #333;
-            margin-bottom: 30px;
-        }
-        
-        .timer-display {
-            font-size: 48px;
-            font-weight: bold;
-            color: #667eea;
-            margin: 30px 0;
-            font-family: 'Courier New', monospace;
-        }
-        
-        button {
-            background-color: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            margin: 5px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        
-        button:hover {
-            background-color: #764ba2;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pomodoro // Neural Focus</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #04040e; }
+  #root { min-height: 100vh; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Pomodoro Timer</h1>
-        <div class="timer-display" id="timer">25:00</div>
-        <button onclick="startTimer()">Start</button>
-        <button onclick="pauseTimer()">Pause</button>
-        <button onclick="resetTimer()">Reset</button>
-    </div>
+<div id="root"></div>
 
-    <script>
-        // Add your Pomodoro timer logic here
-        function startTimer() {
-            console.log('Timer started');
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const THEMES = [
+  { key: "ocean", label: "Ocean", modes: ["#5eb8ff", "#a8d8f0", "#c8dff0"], muted: "#6080a0" },
+  { key: "cyber", label: "Cyber", modes: ["#f0db4f", "#00ffe7", "#bf5fff"], muted: "#7070a0" },
+  { key: "royal", label: "Royal", modes: ["#7b2fff", "#c084fc", "#e2c97e"], muted: "#6050a0" },
+  { key: "blood", label: "Blood", modes: ["#ff3333", "#ff8800", "#ffffff"], muted: "#906060" },
+  { key: "matrix", label: "Matrix", modes: ["#00ff41", "#00cc33", "#88ffaa"], muted: "#207040" },
+  { key: "neon", label: "Neon", modes: ["#ff00ff", "#ff6ec7", "#00ffff"], muted: "#807090" },
+  { key: "sunset", label: "Sunset", modes: ["#ff6b2b", "#ff9f45", "#ffd166"], muted: "#906040" },
+  { key: "arctic", label: "Arctic", modes: ["#a8d8f0", "#dff2ff", "#ffffff"], muted: "#607080" },
+  { key: "forest", label: "Forest", modes: ["#2d8a4e", "#76c442", "#e8a020"], muted: "#405530" },
+  { key: "crimson", label: "Crimson", modes: ["#c0143c", "#e8537a", "#e8b4a0"], muted: "#704050" },
+];
+
+const BG_STYLES = [
+  { key: "cyberrain", label: "Cyber Rain" },
+  { key: "matrix", label: "Matrix Code" },
+  { key: "water", label: "Water" },
+  { key: "aurora", label: "Aurora" },
+  { key: "lightning", label: "Lightning" },
+  { key: "stars", label: "Deep Space" },
+  { key: "snow", label: "Blizzard" },
+  { key: "lava", label: "Lava / Embers" },
+  { key: "bio", label: "Bioluminescence" },
+];
+
+const MODE_LABELS = ["// FOCUS", "// RECHARGE", "// DEEP REST"];
+const MODE_DURATIONS = [25*60, 5*60, 15*60];
+const FOCUS_OPTIONS = [{ label: "25 MIN", value: 25*60 }, { label: "45 MIN", value: 45*60 }, { label: "60 MIN", value: 60*60 }];
+
+const TONES = [
+  { key: "bell", label: "BELL", freq: [880,1100,880], type: "sine" },
+  { key: "chime", label: "CHIME", freq: [523,659,784,1047], type: "triangle" },
+  { key: "beep", label: "BEEP", freq: [440,440], type: "square" },
+];
+
+const VERSES = [
+  { text: "I can do all things through Christ who strengthens me.", ref: "Philippians 4:13" },
+  { text: "Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.", ref: "Joshua 1:9" },
+  { text: "Commit to the Lord whatever you do, and he will establish your plans.", ref: "Proverbs 16:3" },
+  { text: "Whatever you do, work at it with all your heart, as working for the Lord.", ref: "Colossians 3:23" },
+  { text: "The Lord is my strength and my shield; my heart trusts in him, and he helps me.", ref: "Psalm 28:7" },
+  { text: "Trust in the Lord with all your heart and lean not on your own understanding.", ref: "Proverbs 3:5" },
+  { text: "Do not grow weary in doing good, for at the proper time we will reap a harvest.", ref: "Galatians 6:9" },
+  { text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you.", ref: "Jeremiah 29:11" },
+  { text: "The Lord will fight for you; you need only to be still.", ref: "Exodus 14:14" },
+  { text: "Be still and know that I am God.", ref: "Psalm 46:10" },
+  { text: "Come to me, all you who are weary and burdened, and I will give you rest.", ref: "Matthew 11:28" },
+  { text: "Let us run with perseverance the race marked out for us, fixing our eyes on Jesus.", ref: "Hebrews 12:1-2" },
+  { text: "For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.", ref: "John 3:16" },
+  { text: "Neither height nor depth, nor anything else in all creation, will be able to separate us from the love of God that is in Christ Jesus our Lord.", ref: "Romans 8:38-39" },
+  { text: "See what great love the Father has lavished on us, that we should be called children of God — and that is what we are!", ref: "1 John 3:1" },
+  { text: "But God demonstrates his own love for us in this: while we were still sinners, Christ died for us.", ref: "Romans 5:8" },
+  { text: "The Lord your God is with you; he is mighty to save. He will take great delight in you; he will rejoice over you with singing.", ref: "Zephaniah 3:17" },
+  { text: "I have loved you with an everlasting love; I have drawn you with unfailing kindness.", ref: "Jeremiah 31:3" },
+  { text: "There is no fear in love. But perfect love drives out fear.", ref: "1 John 4:18" },
+  { text: "How precious to me are your thoughts, God! How vast is the sum of them!", ref: "Psalm 139:17" },
+  { text: "You are altogether beautiful, my darling; there is no flaw in you.", ref: "Song of Solomon 4:7" },
+  { text: "He who began a good work in you will carry it on to completion until the day of Christ Jesus.", ref: "Philippians 1:6" },
+  { text: "We are God's handiwork, created in Christ Jesus to do good works, which God prepared in advance for us to do.", ref: "Ephesians 2:10" },
+  { text: "The Lord directs the steps of the godly. He delights in every detail of their lives.", ref: "Psalm 37:23" },
+  { text: "And we know that in all things God works for the good of those who love him, who have been called according to his purpose.", ref: "Romans 8:28" },
+  { text: "For it is God who works in you to will and to act in order to fulfill his good purpose.", ref: "Philippians 2:13" },
+  { text: "Cast all your anxiety on him because he cares for you.", ref: "1 Peter 5:7" },
+  { text: "The Lord is close to the brokenhearted and saves those who are crushed in spirit.", ref: "Psalm 34:18" },
+  { text: "May the God of hope fill you with all joy and peace as you trust in him.", ref: "Romans 15:13" },
+  { text: "You did not choose me, but I chose you and appointed you so that you might go and bear fruit.", ref: "John 15:16" },
+  { text: "The Lord your God is in your midst, a mighty one who will save; he will quiet you by his love.", ref: "Zephaniah 3:17" },
+  { text: "See, I am doing a new thing! Now it springs up; do you not perceive it?", ref: "Isaiah 43:19" },
+];
+
+function playTone(k) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = TONES.find(x=>x.key===k)||TONES[0];
+    t.freq.forEach((f,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);o.type=t.type;o.frequency.value=f;
+      g.gain.setValueAtTime(0.3,ctx.currentTime+i*0.25);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.25+0.3);
+      o.start(ctx.currentTime+i*0.25);o.stop(ctx.currentTime+i*0.25+0.35);
+    });
+  } catch(e){}
+}
+function fmt(s){return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;}
+function todayKey(){return new Date().toISOString().slice(0,10);}
+function hexRgb(hex){return `${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)}`;}
+
+function useBG(canvasRef, bgStyle, accentColor) {
+  const colorRef = useRef(accentColor);
+  const styleRef = useRef(bgStyle);
+  colorRef.current = accentColor;
+  styleRef.current = bgStyle;
+
+  useEffect(() => {
+    const c = canvasRef.current; if (!c) return;
+    const ctx = c.getContext("2d");
+    let raf, t = 0, state = {};
+
+    function init() {
+      c.width = c.offsetWidth; c.height = c.offsetHeight;
+      const W = c.width, H = c.height;
+      state = {};
+      state.drops = Array.from({length:Math.floor(W/5)},()=>({x:Math.random()*W*1.2-W*0.1,y:Math.random()*H,len:14+Math.random()*32,speed:7+Math.random()*14,op:0.1+Math.random()*0.35,w:Math.random()>0.85?1.5:0.7}));
+      state.matCols = Array.from({length:Math.floor(W/18)},(_,i)=>({x:i*18,y:Math.random()*H,speed:0.8+Math.random()*1.6}));
+      state.mCols = Array.from({length:Math.floor(W/14)},(_,i)=>({x:i*14,y:Math.random()*-H,speed:1+Math.random()*3}));
+      state.waves = Array.from({length:6},(_,i)=>({amp:8+i*4,freq:0.008+i*0.003,phase:Math.random()*Math.PI*2,speed:0.01+i*0.004,y:H*(0.3+i*0.12)}));
+      state.bubbles = Array.from({length:30},()=>({x:Math.random()*W,y:H+Math.random()*H,r:1+Math.random()*4,speed:0.3+Math.random()*0.8,op:0.1+Math.random()*0.3}));
+      state.bands = Array.from({length:5},(_,i)=>({phase:i*1.2,speed:0.003+i*0.002,amp:40+i*20,y:H*(0.2+i*0.12),hue:160+i*30}));
+      state.bolts=[]; state.nextBolt=60+Math.random()*80; state.glowAlpha=0;
+      state.stars = Array.from({length:220},()=>({x:Math.random()*W,y:Math.random()*H,r:0.3+Math.random()*1.6,twinkle:Math.random()*Math.PI*2,speed:0.02+Math.random()*0.04}));
+      state.nebula = Array.from({length:4},()=>({x:Math.random()*W,y:Math.random()*H,r:60+Math.random()*120,hue:180+Math.random()*120,op:0.04+Math.random()*0.07}));
+      state.shootingStars=[];
+      // snow
+      state.snowflakes = Array.from({length:Math.floor(W/4)},()=>({x:Math.random()*W,y:Math.random()*H,r:0.5+Math.random()*3,speed:0.5+Math.random()*2.5,drift:0,driftPhase:Math.random()*Math.PI*2,driftAmp:0.3+Math.random()*0.8,op:0.3+Math.random()*0.7}));
+      state.snowGround = new Float32Array(Math.ceil(W/4)+1).fill(0);
+      // lava
+      state.lavaBlobs = Array.from({length:12},()=>({x:Math.random()*W,y:H*0.6+Math.random()*H*0.4,vx:(Math.random()-0.5)*0.4,vy:-0.2-Math.random()*0.5,r:8+Math.random()*28,phase:Math.random()*Math.PI*2,life:1}));
+      state.embers = Array.from({length:80},()=>({x:Math.random()*W,y:H*0.5+Math.random()*H*0.5,vx:(Math.random()-0.5)*1.2,vy:-1-Math.random()*3,r:0.8+Math.random()*2.2,op:0.6+Math.random()*0.4,life:Math.random()}));
+      state.lavaSurf = Array.from({length:Math.ceil(W/3)+1},(_,i)=>({x:i*3,phase:Math.random()*Math.PI*2}));
+      // bio
+      state.orbs = Array.from({length:35},()=>({x:Math.random()*W,y:Math.random()*H,r:3+Math.random()*18,phase:Math.random()*Math.PI*2,speed:0.008+Math.random()*0.02,vx:(Math.random()-0.5)*0.15,vy:(Math.random()-0.5)*0.1,hueOffset:Math.random()*60}));
+      state.tendrils = Array.from({length:18},()=>({x:Math.random()*W,y:H*0.4+Math.random()*H*0.6,len:40+Math.random()*80,phase:Math.random()*Math.PI*2,speed:0.006+Math.random()*0.01,segments:8}));
+      state.bioParticles = Array.from({length:60},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-0.5)*0.3,vy:-0.1-Math.random()*0.3,phase:Math.random()*Math.PI*2,speed:0.03+Math.random()*0.05,r:0.8+Math.random()*1.8}));
+    }
+
+    const matChars = "アイウエオカキクケコ0123456789ABCDEF><|/\\!?#@".split("");
+
+    function drawCyberRain(W,H,rgb){
+      ctx.fillStyle="rgba(4,4,14,0.22)";ctx.fillRect(0,0,W,H);
+      state.matCols.forEach(col=>{
+        ctx.fillStyle=`rgba(${rgb},0.1)`;ctx.font="13px monospace";
+        ctx.fillText(matChars[Math.floor(Math.random()*matChars.length)],col.x,col.y);
+        col.y+=col.speed;if(col.y>H+20)col.y=-20;
+      });
+      state.drops.forEach(d=>{
+        const g2=ctx.createLinearGradient(d.x,d.y,d.x-d.len*0.2,d.y+d.len);
+        g2.addColorStop(0,`rgba(${rgb},0)`);g2.addColorStop(0.5,`rgba(${rgb},${d.op*0.5})`);g2.addColorStop(1,`rgba(${rgb},${d.op})`);
+        ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-d.len*0.2,d.y+d.len);
+        ctx.strokeStyle=g2;ctx.lineWidth=d.w;ctx.stroke();
+        if(d.y+d.len>H-2&&d.y+d.len<H+10){ctx.beginPath();ctx.arc(d.x,H,1.5,0,Math.PI*2);ctx.fillStyle=`rgba(${rgb},${d.op*0.4})`;ctx.fill();}
+        d.y+=d.speed;if(d.y>H+40){d.y=-40;d.x=Math.random()*W*1.2-W*0.1;}
+      });
+      for(let y=0;y<H;y+=4){ctx.fillStyle="rgba(0,0,0,0.07)";ctx.fillRect(0,y,W,1);}
+    }
+
+    function drawMatrix(W,H,rgb){
+      ctx.fillStyle="rgba(0,4,0,0.18)";ctx.fillRect(0,0,W,H);
+      state.mCols.forEach(col=>{
+        const ch=matChars[Math.floor(Math.random()*matChars.length)];
+        ctx.fillStyle=`rgba(${rgb},0.85)`;ctx.font="bold 13px monospace";ctx.fillText(ch,col.x,col.y);
+        ctx.fillStyle=`rgba(${rgb},0.25)`;ctx.font="13px monospace";
+        for(let i=1;i<8;i++)ctx.fillText(matChars[Math.floor(Math.random()*matChars.length)],col.x,col.y-i*14);
+        col.y+=col.speed*2;if(col.y>H+100)col.y=-100-Math.random()*H;
+      });
+    }
+
+    function drawWater(W,H,rgb){
+      const base=ctx.createLinearGradient(0,0,0,H);
+      base.addColorStop(0,"rgba(0,10,30,0.4)");base.addColorStop(1,"rgba(0,2,12,0.5)");
+      ctx.fillStyle=base;ctx.fillRect(0,0,W,H);
+      if(!state.caustics)state.caustics=Array.from({length:18},()=>({x:Math.random()*W,y:H*0.5+Math.random()*H*0.5,rx:20+Math.random()*60,ry:4+Math.random()*12,speed:0.002+Math.random()*0.004,phase:Math.random()*Math.PI*2,drift:0.2+Math.random()*0.5}));
+      state.caustics.forEach(ca=>{
+        ca.phase+=ca.speed;ca.x+=ca.drift;if(ca.x>W+80)ca.x=-80;
+        const op=0.04+Math.abs(Math.sin(ca.phase))*0.09;
+        const g=ctx.createRadialGradient(ca.x,ca.y,0,ca.x,ca.y,ca.rx);
+        g.addColorStop(0,`rgba(${rgb},${op*1.5})`);g.addColorStop(0.5,`rgba(${rgb},${op})`);g.addColorStop(1,`rgba(${rgb},0)`);
+        ctx.save();ctx.scale(1,ca.ry/ca.rx);ctx.beginPath();ctx.arc(ca.x,ca.y*(ca.rx/ca.ry),ca.rx,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();ctx.restore();
+      });
+      state.waves.forEach((wave,wi)=>{
+        wave.phase+=wave.speed;
+        ctx.beginPath();ctx.moveTo(0,wave.y);
+        for(let x=0;x<=W;x+=3){ctx.lineTo(x,wave.y+Math.sin(x*wave.freq+wave.phase)*wave.amp+Math.sin(x*wave.freq*2.3+wave.phase*1.7)*wave.amp*0.35+Math.sin(x*wave.freq*0.5+wave.phase*0.6)*wave.amp*0.5);}
+        ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+        const wg=ctx.createLinearGradient(0,wave.y-wave.amp,0,wave.y+wave.amp+20);
+        wg.addColorStop(0,`rgba(${rgb},${0.07+wi*0.012})`);wg.addColorStop(1,`rgba(0,8,20,${0.15+wi*0.04})`);
+        ctx.fillStyle=wg;ctx.fill();
+        ctx.beginPath();ctx.moveTo(0,wave.y);
+        for(let x=0;x<=W;x+=3)ctx.lineTo(x,wave.y+Math.sin(x*wave.freq+wave.phase)*wave.amp+Math.sin(x*wave.freq*2.3+wave.phase*1.7)*wave.amp*0.35);
+        ctx.strokeStyle=`rgba(${rgb},${wi===0?0.45:0.15+wi*0.04})`;ctx.lineWidth=wi===0?1.2:0.6;ctx.stroke();
+      });
+      if(!state.rays)state.rays=Array.from({length:6},()=>({x:Math.random()*W,width:20+Math.random()*50,phase:Math.random()*Math.PI*2,speed:0.003+Math.random()*0.004}));
+      state.rays.forEach(ray=>{
+        ray.phase+=ray.speed;const op=0.03+Math.abs(Math.sin(ray.phase))*0.05;const rx=ray.x+Math.sin(ray.phase)*30;
+        const rg=ctx.createLinearGradient(rx,0,rx+ray.width*0.5,H*0.85);
+        rg.addColorStop(0,`rgba(${rgb},${op*2})`);rg.addColorStop(0.6,`rgba(${rgb},${op})`);rg.addColorStop(1,`rgba(${rgb},0)`);
+        ctx.beginPath();ctx.moveTo(rx,0);ctx.lineTo(rx+ray.width,0);ctx.lineTo(rx+ray.width*1.8,H*0.85);ctx.lineTo(rx-ray.width*0.3,H*0.85);ctx.closePath();ctx.fillStyle=rg;ctx.fill();
+      });
+      state.bubbles.forEach(b=>{
+        b.y-=b.speed;b.x+=Math.sin(b.y*0.04)*0.4;if(b.y<-10){b.y=H+10;b.x=Math.random()*W;}
+        ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.strokeStyle=`rgba(${rgb},${b.op*0.8})`;ctx.lineWidth=0.8;ctx.stroke();
+        ctx.beginPath();ctx.arc(b.x-b.r*0.3,b.y-b.r*0.3,b.r*0.3,0,Math.PI*2);ctx.fillStyle="rgba(255,255,255,0.12)";ctx.fill();
+      });
+      if(!state.particles)state.particles=Array.from({length:25},()=>({x:Math.random()*W,y:Math.random()*H,vy:-0.05-Math.random()*0.15,vx:(Math.random()-0.5)*0.2,size:0.5+Math.random()*1.5,op:0.1+Math.random()*0.25}));
+      state.particles.forEach(p=>{
+        p.x+=p.vx+Math.sin(t*0.01+p.y*0.02)*0.15;p.y+=p.vy;if(p.y<-5){p.y=H+5;p.x=Math.random()*W;}
+        ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=`rgba(${rgb},${p.op})`;ctx.fill();
+      });
+    }
+
+    function drawAurora(W,H,rgb){
+      ctx.fillStyle="rgba(0,2,10,0.25)";ctx.fillRect(0,0,W,H);
+      const [r,g,b]=rgb.split(",").map(Number);
+      const baseHue=Math.round(Math.atan2(b-128,r-128)*180/Math.PI+360)%360;
+      state.bands.forEach(band=>{
+        band.phase+=band.speed;
+        for(let x=0;x<=W;x+=3){
+          const y=band.y+Math.sin(x*0.005+band.phase)*band.amp+Math.sin(x*0.012+band.phase*1.3)*band.amp*0.5;
+          const h=(baseHue+band.hue-160+Math.sin(x*0.008+t*0.005)*25+360)%360;
+          const gl=ctx.createLinearGradient(x,y-60,x,y+60);
+          gl.addColorStop(0,`hsla(${h},90%,65%,0)`);gl.addColorStop(0.5,`hsla(${h},90%,65%,0.13)`);gl.addColorStop(1,`hsla(${h},90%,65%,0)`);
+          ctx.fillStyle=gl;ctx.fillRect(x,y-60,3,120);
         }
-        
-        function pauseTimer() {
-            console.log('Timer paused');
+      });
+      ctx.fillStyle="rgba(0,0,8,0.15)";ctx.fillRect(0,H*0.6,W,H*0.4);
+    }
+
+    function makeBolt(x1,y1,x2,y2,depth){
+      if(depth<=0)return[[x1,y1,x2,y2]];
+      const mx=(x1+x2)/2+(Math.random()-0.5)*80,my=(y1+y2)/2+(Math.random()-0.5)*40;
+      return[...makeBolt(x1,y1,mx,my,depth-1),...makeBolt(mx,my,x2,y2,depth-1)];
+    }
+
+    function drawLightning(W,H,rgb){
+      const sky=ctx.createLinearGradient(0,0,0,H*0.55);
+      sky.addColorStop(0,"rgba(2,6,4,0.45)");sky.addColorStop(1,"rgba(1,4,2,0.3)");
+      ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+      if(!state.moon)state.moon={x:W*0.78,y:H*0.12};
+      const mg=ctx.createRadialGradient(state.moon.x,state.moon.y,0,state.moon.x,state.moon.y,80);
+      mg.addColorStop(0,"rgba(200,230,180,0.18)");mg.addColorStop(0.3,"rgba(150,200,130,0.06)");mg.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=mg;ctx.fillRect(0,0,W,H);
+      ctx.beginPath();ctx.arc(state.moon.x,state.moon.y,14,0,Math.PI*2);ctx.fillStyle="rgba(220,240,200,0.55)";ctx.fill();
+      ctx.fillStyle="rgba(4,14,6,0.92)";ctx.beginPath();ctx.moveTo(0,H);
+      for(let x=0;x<=W;x++)ctx.lineTo(x,H*0.48-Math.abs(Math.sin(x*0.04+1.2))*28-Math.abs(Math.sin(x*0.09+2.5))*14-Math.abs(Math.sin(x*0.02+0.4))*20);
+      ctx.lineTo(W,H);ctx.closePath();ctx.fill();
+      ctx.fillStyle="rgba(3,11,5,0.97)";ctx.beginPath();ctx.moveTo(0,H);
+      for(let x=0;x<=W;x++)ctx.lineTo(x,H*0.58-Math.abs(Math.sin(x*0.05+0.5))*42-Math.abs(Math.sin(x*0.11+1.8))*18-Math.abs(Math.sin(x*0.025+3.1))*28);
+      ctx.lineTo(W,H);ctx.closePath();ctx.fill();
+      ctx.fillStyle="rgba(2,8,3,1)";ctx.beginPath();ctx.moveTo(0,H);
+      for(let x=0;x<=W;x++)ctx.lineTo(x,H*0.7-Math.abs(Math.sin(x*0.035+2.2))*70-Math.abs(Math.sin(x*0.08+0.9))*25-Math.abs(Math.sin(x*0.018+1.1))*45);
+      ctx.lineTo(W,H);ctx.closePath();ctx.fill();
+      state.drops.forEach(d=>{
+        const g2=ctx.createLinearGradient(d.x,d.y,d.x-d.len*0.15,d.y+d.len);
+        g2.addColorStop(0,"rgba(160,200,160,0)");g2.addColorStop(1,`rgba(160,200,160,${d.op*0.45})`);
+        ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-d.len*0.15,d.y+d.len);ctx.strokeStyle=g2;ctx.lineWidth=0.6;ctx.stroke();
+        d.y+=d.speed*1.5;if(d.y>H+30){d.y=-30;d.x=Math.random()*W;}
+      });
+      state.nextBolt--;
+      if(state.nextBolt<=0){const sx=W*0.15+Math.random()*W*0.7,ex=sx+(Math.random()-0.5)*180;state.bolts=makeBolt(sx,0,ex,H*0.45+Math.random()*H*0.2,4);state.glowAlpha=0.22;state.nextBolt=55+Math.random()*110;}
+      if(state.glowAlpha>0){
+        ctx.fillStyle=`rgba(180,255,160,${state.glowAlpha*0.25})`;ctx.fillRect(0,0,W,H);
+        state.bolts.forEach(([x1,y1,x2,y2])=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle="rgba(220,255,210,0.95)";ctx.lineWidth=1.8;ctx.stroke();ctx.strokeStyle=`rgba(${rgb},0.45)`;ctx.lineWidth=5;ctx.stroke();});
+        state.glowAlpha=Math.max(0,state.glowAlpha-0.007);
+      }
+      const fog=ctx.createLinearGradient(0,H*0.68,0,H);fog.addColorStop(0,"rgba(10,30,12,0)");fog.addColorStop(1,"rgba(6,20,8,0.7)");ctx.fillStyle=fog;ctx.fillRect(0,H*0.6,W,H*0.4);
+      if(!state.fireflies)state.fireflies=Array.from({length:18},()=>({x:Math.random()*W,y:H*0.45+Math.random()*H*0.45,phase:Math.random()*Math.PI*2,speed:0.02+Math.random()*0.03,vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.3}));
+      state.fireflies.forEach(ff=>{
+        ff.phase+=ff.speed;ff.x+=ff.vx;ff.y+=ff.vy;
+        if(ff.x<0||ff.x>W)ff.vx*=-1;if(ff.y<H*0.4||ff.y>H)ff.vy*=-1;
+        const fop=Math.max(0,Math.sin(ff.phase));
+        if(fop>0.1){const fg2=ctx.createRadialGradient(ff.x,ff.y,0,ff.x,ff.y,6);fg2.addColorStop(0,`rgba(180,255,100,${fop*0.9})`);fg2.addColorStop(1,"rgba(180,255,100,0)");ctx.fillStyle=fg2;ctx.beginPath();ctx.arc(ff.x,ff.y,6,0,Math.PI*2);ctx.fill();}
+      });
+    }
+
+    function drawStars(W,H,rgb){
+      ctx.fillStyle="rgba(1,1,8,0.3)";ctx.fillRect(0,0,W,H);
+      state.nebula.forEach(n=>{const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r);g.addColorStop(0,`hsla(${n.hue},80%,60%,${n.op*2})`);g.addColorStop(1,`hsla(${n.hue},80%,60%,0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fill();});
+      state.stars.forEach(s=>{s.twinkle+=s.speed;const op=0.4+Math.sin(s.twinkle)*0.5;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(${rgb},${op})`;ctx.fill();});
+      if(Math.random()<0.004)state.shootingStars.push({x:Math.random()*W,y:Math.random()*H*0.4,vx:4+Math.random()*6,vy:1+Math.random()*3,life:1});
+      state.shootingStars=state.shootingStars.filter(s=>{
+        ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x-s.vx*12,s.y-s.vy*12);
+        const g=ctx.createLinearGradient(s.x,s.y,s.x-s.vx*12,s.y-s.vy*12);g.addColorStop(0,"rgba(255,255,255,"+s.life+")");g.addColorStop(1,"rgba(255,255,255,0)");
+        ctx.strokeStyle=g;ctx.lineWidth=1.2;ctx.stroke();s.x+=s.vx;s.y+=s.vy;s.life-=0.04;return s.life>0&&s.x<W&&s.y<H;
+      });
+    }
+
+    function drawSnow(W,H,rgb){
+      const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,"rgba(8,12,20,0.4)");sky.addColorStop(1,"rgba(18,22,35,0.35)");ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+      // distant blurred snowfield ground
+      const ground=ctx.createLinearGradient(0,H*0.75,0,H);ground.addColorStop(0,"rgba(200,215,235,0)");ground.addColorStop(0.4,`rgba(${rgb},0.08)`);ground.addColorStop(1,`rgba(${rgb},0.22)`);ctx.fillStyle=ground;ctx.fillRect(0,H*0.7,W,H*0.3);
+      // wind gusts
+      if(!state.gusts)state.gusts=Array.from({length:6},()=>({x:Math.random()*W,y:Math.random()*H*0.6,width:60+Math.random()*140,phase:Math.random()*Math.PI*2,speed:0.02+Math.random()*0.03,op:0.03+Math.random()*0.06}));
+      state.gusts.forEach(g=>{g.phase+=g.speed;g.x+=1.5;if(g.x>W+200)g.x=-200;const op=Math.abs(Math.sin(g.phase))*g.op;const gg=ctx.createLinearGradient(g.x,g.y,g.x+g.width,g.y);gg.addColorStop(0,`rgba(${rgb},0)`);gg.addColorStop(0.5,`rgba(${rgb},${op})`);gg.addColorStop(1,`rgba(${rgb},0)`);ctx.fillStyle=gg;ctx.fillRect(g.x,g.y,g.width,1.5);});
+      // snowflakes
+      state.snowflakes.forEach(s=>{
+        s.driftPhase+=0.01;s.drift=Math.sin(s.driftPhase)*s.driftAmp;
+        s.x+=s.drift+0.8;s.y+=s.speed;
+        if(s.y>H+10){s.y=-10;s.x=Math.random()*W;}if(s.x>W+10)s.x=-10;
+        ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(${rgb},${s.op})`;ctx.fill();
+        // snowflake glint
+        if(s.r>1.8){ctx.beginPath();ctx.arc(s.x-s.r*0.3,s.y-s.r*0.3,s.r*0.3,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,0.5)`;ctx.fill();}
+      });
+      // fog layer
+      const fog=ctx.createLinearGradient(0,H*0.6,0,H);fog.addColorStop(0,`rgba(${rgb},0)`);fog.addColorStop(1,`rgba(${rgb},0.07)`);ctx.fillStyle=fog;ctx.fillRect(0,H*0.5,W,H*0.5);
+    }
+
+    function drawLava(W,H,rgb){
+      // dark volcanic bg
+      ctx.fillStyle="rgba(6,2,2,0.45)";ctx.fillRect(0,0,W,H);
+      // rocky ground silhouette
+      ctx.fillStyle="rgba(12,4,2,0.98)";ctx.beginPath();ctx.moveTo(0,H);
+      for(let x=0;x<=W;x+=2)ctx.lineTo(x,H*0.72+Math.abs(Math.sin(x*0.03+1))*22+Math.abs(Math.sin(x*0.07+2))*12+Math.abs(Math.sin(x*0.015+0.5))*30);
+      ctx.lineTo(W,H);ctx.closePath();ctx.fill();
+      // lava surface glow at horizon
+      const lavHor=ctx.createLinearGradient(0,H*0.55,0,H*0.78);lavHor.addColorStop(0,`rgba(${rgb},0)`);lavHor.addColorStop(0.5,"rgba(255,80,0,0.18)");lavHor.addColorStop(1,"rgba(255,40,0,0.35)");ctx.fillStyle=lavHor;ctx.fillRect(0,H*0.5,W,H*0.3);
+      // lava cracks
+      if(!state.cracks){state.cracks=Array.from({length:8},()=>{const sx=Math.random()*W,sy=H*0.65+Math.random()*H*0.25;const segs=[];let cx=sx,cy=sy;for(let i=0;i<6;i++){cx+=(Math.random()-0.5)*60;cy+=5+Math.random()*20;segs.push([cx,cy]);}return{start:[sx,sy],segs,phase:Math.random()*Math.PI*2,speed:0.02+Math.random()*0.03};});}
+      state.cracks.forEach(cr=>{cr.phase+=cr.speed;const brightness=0.3+Math.abs(Math.sin(cr.phase))*0.7;ctx.beginPath();ctx.moveTo(cr.start[0],cr.start[1]);cr.segs.forEach(([x,y])=>ctx.lineTo(x,y));ctx.strokeStyle=`rgba(255,${Math.floor(60+brightness*80)},0,${brightness*0.8})`;ctx.lineWidth=1.5;ctx.stroke();});
+      // lava blobs
+      state.lavaBlobs.forEach(b=>{
+        b.phase+=0.02;b.x+=b.vx;b.y+=b.vy;b.vy+=0.02;b.life-=0.004;
+        if(b.life<=0||b.y>H*0.8){b.x=Math.random()*W;b.y=H*0.75+Math.random()*H*0.15;b.vx=(Math.random()-0.5)*0.4;b.vy=-0.3-Math.random()*0.8;b.r=6+Math.random()*22;b.life=0.6+Math.random()*0.4;}
+        const br=0.5+Math.abs(Math.sin(b.phase))*0.5;
+        const bg=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r);
+        bg.addColorStop(0,`rgba(255,${Math.floor(180*br)},0,${b.life*0.9})`);bg.addColorStop(0.5,`rgba(220,60,0,${b.life*0.6})`);bg.addColorStop(1,`rgba(${rgb},0)`);
+        ctx.beginPath();ctx.arc(b.x,b.y,b.r*(0.7+Math.sin(b.phase)*0.3),0,Math.PI*2);ctx.fillStyle=bg;ctx.fill();
+      });
+      // embers
+      state.embers.forEach(e=>{
+        e.x+=e.vx+Math.sin(t*0.02+e.y*0.05)*0.3;e.y+=e.vy;e.vy*=0.99;e.life-=0.008;e.op=Math.max(0,e.life);
+        if(e.life<=0){e.x=W*0.1+Math.random()*W*0.8;e.y=H*0.65+Math.random()*H*0.1;e.vx=(Math.random()-0.5)*1.2;e.vy=-1.5-Math.random()*3;e.life=0.7+Math.random()*0.3;}
+        const eg=ctx.createRadialGradient(e.x,e.y,0,e.x,e.y,e.r*2);eg.addColorStop(0,`rgba(255,200,50,${e.op})`);eg.addColorStop(0.5,`rgba(255,80,0,${e.op*0.6})`);eg.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.beginPath();ctx.arc(e.x,e.y,e.r*2,0,Math.PI*2);ctx.fillStyle=eg;ctx.fill();
+      });
+      // smoke wisps
+      if(!state.smoke)state.smoke=Array.from({length:10},()=>({x:Math.random()*W,y:H*0.5+Math.random()*H*0.2,r:8+Math.random()*20,vy:-0.3-Math.random()*0.4,phase:Math.random()*Math.PI*2,op:0.04+Math.random()*0.08}));
+      state.smoke.forEach(s=>{s.y+=s.vy;s.r+=0.1;s.op*=0.995;s.phase+=0.008;s.x+=Math.sin(s.phase)*0.4;if(s.y<H*0.1||s.op<0.01){s.x=Math.random()*W;s.y=H*0.65+Math.random()*H*0.1;s.r=8+Math.random()*16;s.op=0.04+Math.random()*0.07;s.vy=-0.3-Math.random()*0.4;}const sg=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,s.r);sg.addColorStop(0,`rgba(40,20,10,${s.op})`);sg.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=sg;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();});
+    }
+
+    function drawBio(W,H,rgb){
+      // deep ocean dark bg
+      ctx.fillStyle="rgba(0,4,10,0.35)";ctx.fillRect(0,0,W,H);
+      const [r,g,b]=rgb.split(",").map(Number);
+      // drifting bioluminescent orbs
+      state.orbs.forEach(orb=>{
+        orb.phase+=orb.speed;orb.x+=orb.vx+Math.sin(orb.phase*0.7)*0.08;orb.y+=orb.vy+Math.cos(orb.phase*0.5)*0.06;
+        if(orb.x<-50)orb.x=W+50;if(orb.x>W+50)orb.x=-50;if(orb.y<-50)orb.y=H+50;if(orb.y>H+50)orb.y=-50;
+        const pulse=0.4+Math.sin(orb.phase)*0.6;const hShift=(orb.hueOffset+t*0.05)%360;
+        const og=ctx.createRadialGradient(orb.x,orb.y,0,orb.x,orb.y,orb.r*(1+pulse*0.4));
+        og.addColorStop(0,`hsla(${hShift},100%,75%,${pulse*0.55})`);og.addColorStop(0.4,`hsla(${hShift},100%,60%,${pulse*0.2})`);og.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.beginPath();ctx.arc(orb.x,orb.y,orb.r*(1+pulse*0.4),0,Math.PI*2);ctx.fillStyle=og;ctx.fill();
+      });
+      // glowing tendrils
+      state.tendrils.forEach(td=>{
+        td.phase+=td.speed;const pulse=0.3+Math.abs(Math.sin(td.phase))*0.7;
+        ctx.beginPath();ctx.moveTo(td.x,td.y);
+        let cx=td.x,cy=td.y;
+        for(let i=0;i<td.segments;i++){
+          cx+=Math.sin(td.phase+i*0.8)*12;cy-=td.len/td.segments;
+          ctx.lineTo(cx,cy);
         }
-        
-        function resetTimer() {
-            console.log('Timer reset');
-        }
-    </script>
+        const hShift=(t*0.08+td.x*0.1)%360;
+        ctx.strokeStyle=`hsla(${hShift},100%,65%,${pulse*0.35})`;ctx.lineWidth=1.5;ctx.stroke();
+        // tip glow
+        const tg=ctx.createRadialGradient(cx,cy,0,cx,cy,8);tg.addColorStop(0,`hsla(${hShift},100%,80%,${pulse*0.6})`);tg.addColorStop(1,"rgba(0,0,0,0)");ctx.beginPath();ctx.arc(cx,cy,8,0,Math.PI*2);ctx.fillStyle=tg;ctx.fill();
+      });
+      // floating bio particles
+      state.bioParticles.forEach(p=>{
+        p.phase+=p.speed;p.x+=p.vx+Math.sin(p.phase)*0.12;p.y+=p.vy;
+        if(p.y<-10)p.y=H+10;if(p.x<0)p.x=W;if(p.x>W)p.x=0;
+        const pop=0.3+Math.abs(Math.sin(p.phase))*0.6;const hShift=(p.phase*30+t*0.1)%360;
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`hsla(${hShift},100%,70%,${pop*0.7})`;ctx.fill();
+      });
+      // subtle theme-color depth haze
+      const haze=ctx.createLinearGradient(0,0,0,H);haze.addColorStop(0,`rgba(${r},${g},${b},0.04)`);haze.addColorStop(0.5,"rgba(0,0,0,0)");haze.addColorStop(1,`rgba(${r},${g},${b},0.06)`);ctx.fillStyle=haze;ctx.fillRect(0,0,W,H);
+    }
+
+    init();
+    window.addEventListener("resize",init);
+    function draw(){
+      const W=c.width,H=c.height,rgb=hexRgb(colorRef.current),sty=styleRef.current;t++;
+      if(sty==="cyberrain")drawCyberRain(W,H,rgb);
+      else if(sty==="matrix")drawMatrix(W,H,rgb);
+      else if(sty==="water")drawWater(W,H,rgb);
+      else if(sty==="aurora")drawAurora(W,H,rgb);
+      else if(sty==="lightning")drawLightning(W,H,rgb);
+      else if(sty==="stars")drawStars(W,H,rgb);
+      else if(sty==="snow")drawSnow(W,H,rgb);
+      else if(sty==="lava")drawLava(W,H,rgb);
+      else if(sty==="bio")drawBio(W,H,rgb);
+      raf=requestAnimationFrame(draw);
+    }
+    draw();
+    return()=>{cancelAnimationFrame(raf);window.removeEventListener("resize",init);};
+  },[]);
+}
+
+const VerseDisplay = ({ verseIdx, accentColor, mutedColor }) => {
+  const [visible,setVisible]=useState(true);
+  const [shown,setShown]=useState(verseIdx);
+  const prev=useRef(verseIdx);
+  useEffect(()=>{
+    if(verseIdx===prev.current)return;
+    setVisible(false);
+    const t=setTimeout(()=>{setShown(verseIdx);prev.current=verseIdx;setVisible(true);},700);
+    return()=>clearTimeout(t);
+  },[verseIdx]);
+  const v=VERSES[shown%VERSES.length];
+  return(
+    <div style={{opacity:visible?1:0,transform:visible?"translateY(0)":"translateY(8px)",transition:"opacity 0.7s ease,transform 0.7s ease",padding:"clamp(12px,2vw,18px) clamp(10px,2vw,16px)",textAlign:"center"}}>
+      <div style={{fontSize:"clamp(8px,1.1vw,10px)",color:mutedColor,letterSpacing:3,marginBottom:8,fontFamily:"'Courier New',monospace"}}>//SCRIPTURE</div>
+      <div style={{fontSize:"clamp(13px,1.8vw,16px)",color:"#d0d0f0",lineHeight:1.75,fontStyle:"italic",marginBottom:10,fontFamily:"Georgia,serif"}}>"{v.text}"</div>
+      <div style={{fontSize:"clamp(10px,1.3vw,12px)",letterSpacing:2,fontFamily:"'Courier New',monospace",color:accentColor,textShadow:`0 0 8px ${accentColor}88`}}>— {v.ref}</div>
+    </div>
+  );
+};
+
+function App() {
+  const [modeIdx,setModeIdx]=useState(0);
+  const [focusDuration,setFocusDuration]=useState(25*60);
+  const [timeLeft,setTimeLeft]=useState(25*60);
+  const [running,setRunning]=useState(false);
+  const [task,setTask]=useState("");
+  const [tone,setTone]=useState("bell");
+  const [pomCount,setPomCount]=useState(0);
+  const [sessions,setSessions]=useState([]);
+  const [streak,setStreak]=useState(0);
+  const [todayCount,setTodayCount]=useState(0);
+  const [verseIdx,setVerseIdx]=useState(0);
+  const [themeKey,setThemeKey]=useState("ocean");
+  const [bgStyle,setBgStyle]=useState("cyberrain");
+  const [showSettings,setShowSettings]=useState(false);
+  const intervalRef=useRef(null);
+  const modeRef=useRef(modeIdx);
+  modeRef.current=modeIdx;
+  const canvasRef=useRef(null);
+  const theme=THEMES.find(t=>t.key===themeKey);
+  useBG(canvasRef,bgStyle,theme.modes[modeIdx]);
+
+  useEffect(()=>{
+    async function load(){try{const raw=localStorage.getItem("pom_data");if(raw){const d=JSON.parse(raw);setSessions(d.sessions||[]);computeStreak(d.sessions||[]);}}catch(e){}}
+    load();
+  },[]);
+
+  function computeStreak(s){
+    const days={};s.filter(x=>x.type==="work").forEach(x=>{const d=x.ts.slice(0,10);days[d]=(days[d]||0)+1;});
+    const today=todayKey();setTodayCount(days[today]||0);
+    let str=0,check=new Date(today);
+    while(true){const k=check.toISOString().slice(0,10);if(days[k]){str++;check.setDate(check.getDate()-1);}else break;}
+    setStreak(str);
+  }
+
+  async function saveSession(type,taskLabel){
+    const entry={type,task:taskLabel,ts:new Date().toISOString()};
+    const ns=[...sessions,entry];setSessions(ns);computeStreak(ns);
+    try{localStorage.setItem("pom_data",JSON.stringify({sessions:ns}));}catch(e){}
+  }
+
+  function getDuration(idx){return idx===0?focusDuration:MODE_DURATIONS[idx];}
+
+  const handleComplete=useCallback(()=>{
+    playTone(tone);saveSession(modeRef.current===0?"work":modeRef.current===1?"short":"long",task);
+    setVerseIdx(v=>(v+1)%VERSES.length);
+    if(modeRef.current===0){const n=pomCount+1;setPomCount(n);if(n%4===0){setModeIdx(2);setTimeLeft(MODE_DURATIONS[2]);}else{setModeIdx(1);setTimeLeft(MODE_DURATIONS[1]);}}
+    else{setModeIdx(0);setTimeLeft(focusDuration);}
+    setRunning(false);
+  },[tone,task,pomCount,sessions,focusDuration]);
+
+  useEffect(()=>{
+    if(running){intervalRef.current=setInterval(()=>{setTimeLeft(t=>{if(t<=1){clearInterval(intervalRef.current);handleComplete();return 0;}return t-1;});},1000);}
+    else clearInterval(intervalRef.current);
+    return()=>clearInterval(intervalRef.current);
+  },[running,handleComplete]);
+
+  function switchMode(i){clearInterval(intervalRef.current);setRunning(false);setModeIdx(i);setTimeLeft(getDuration(i));}
+  function reset(){clearInterval(intervalRef.current);setRunning(false);setTimeLeft(getDuration(modeIdx));}
+  function handleFocusChange(val){setFocusDuration(val);if(modeIdx===0){clearInterval(intervalRef.current);setRunning(false);setTimeLeft(val);}}
+
+  const color=theme.modes[modeIdx];
+  const muted=theme.muted;
+  const pct=((getDuration(modeIdx)-timeLeft)/getDuration(modeIdx))*100;
+  const R=88,circ=2*Math.PI*R,dash=(pct/100)*circ;
+  const recentWork=sessions.filter(s=>s.type==="work"&&s.ts.slice(0,10)===todayKey()).slice(-5).reverse();
+  const font="'Courier New',monospace";
+
+  return(
+    <div style={{position:"relative",minHeight:"100vh",background:"#04040e",overflow:"hidden",fontFamily:font}}>
+      <canvas ref={canvasRef} style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px)",pointerEvents:"none",zIndex:1}}/>
+      <div style={{position:"relative",zIndex:2,maxWidth:480,margin:"0 auto",padding:"clamp(0.8rem,2.5vw,1.8rem) clamp(0.75rem,3vw,1.25rem)"}}>
+
+        <div style={{textAlign:"center",marginBottom:"clamp(8px,1.5vw,14px)"}}>
+          <div style={{fontSize:"clamp(9px,1.2vw,11px)",color:muted,letterSpacing:4,marginBottom:2}}>NEURAL.FOCUS v3.0</div>
+          <div style={{fontSize:"clamp(18px,3vw,24px)",fontWeight:"bold",color,textShadow:`0 0 14px ${color}`,letterSpacing:"clamp(2px,0.6vw,4px)",transition:"color 0.4s,text-shadow 0.4s"}}>POMODORO.SYS</div>
+        </div>
+
+        <div style={{display:"flex",gap:"clamp(5px,1vw,8px)",justifyContent:"center",marginBottom:"clamp(10px,1.8vw,16px)"}}>
+          {MODE_LABELS.map((lbl,i)=>(
+            <button key={i} onClick={()=>switchMode(i)} style={{padding:"clamp(7px,1.2vw,10px) clamp(10px,2vw,18px)",fontFamily:font,fontSize:"clamp(10px,1.4vw,13px)",letterSpacing:1,fontWeight:"bold",border:`1px solid ${i===modeIdx?theme.modes[i]:"#222240"}`,background:i===modeIdx?`${theme.modes[i]}18`:"transparent",color:i===modeIdx?theme.modes[i]:muted,cursor:"pointer",textShadow:i===modeIdx?`0 0 8px ${theme.modes[i]}`:"none",transition:"all 0.3s"}}>{lbl}</button>
+          ))}
+        </div>
+
+        <div style={{display:"flex",justifyContent:"center",marginBottom:"clamp(10px,1.8vw,16px)"}}>
+          <div style={{filter:`drop-shadow(0 0 20px ${color}88)`,transition:"filter 0.4s"}}>
+            <svg width="clamp(210px,40vw,250px)" height="clamp(210px,40vw,250px)" viewBox="0 0 210 210">
+              <circle cx={105} cy={105} r={R} fill="none" stroke="#111128" strokeWidth={12}/>
+              <circle cx={105} cy={105} r={R} fill="none" stroke={color} strokeWidth={2} opacity={0.15}/>
+              <circle cx={105} cy={105} r={R} fill="none" stroke={color} strokeWidth={7} strokeDasharray={`${dash} ${circ}`} strokeLinecap="square" transform="rotate(-90 105 105)" style={{transition:"stroke-dasharray 0.5s linear"}}/>
+              {[0,45,90,135,180,225,270,315].map(a=>{const rad=(a-90)*Math.PI/180,long=a%90===0;const r1=R-(long?14:6),r2=R+(long?5:2);return <line key={a} x1={105+r1*Math.cos(rad)} y1={105+r1*Math.sin(rad)} x2={105+r2*Math.cos(rad)} y2={105+r2*Math.sin(rad)} stroke={color} strokeWidth={long?2:1} opacity={long?0.7:0.3}/>;})}
+              <text x={105} y={98} textAnchor="middle" fontSize={40} fontWeight="bold" fill={color} fontFamily={font}>{fmt(timeLeft)}</text>
+              <text x={105} y={120} textAnchor="middle" fontSize={10} fill={muted} fontFamily={font} letterSpacing="3">{running?"EXECUTING":timeLeft<getDuration(modeIdx)?"PAUSED":"STANDBY"}</text>
+              <text x={105} y={136} textAnchor="middle" fontSize={9} fill={color} fontFamily={font} letterSpacing="2" opacity={0.6}>{MODE_LABELS[modeIdx]}</text>
+            </svg>
+          </div>
+        </div>
+
+        <div style={{marginBottom:"clamp(8px,1.5vw,14px)"}}>
+          <div style={{fontSize:"clamp(9px,1.1vw,11px)",color:muted,letterSpacing:2,marginBottom:4}}>TASK_INPUT &gt;</div>
+          <input value={task} onChange={e=>setTask(e.target.value)} placeholder="describe your mission..."
+            style={{width:"100%",boxSizing:"border-box",background:"rgba(0,0,20,0.75)",border:`1px solid ${color}55`,color,fontFamily:font,fontSize:"clamp(13px,1.8vw,16px)",padding:"clamp(9px,1.4vw,12px) 12px",outline:"none",caretColor:color}}/>
+        </div>
+
+        <div style={{display:"flex",gap:"clamp(6px,1vw,10px)",marginBottom:"clamp(10px,1.8vw,16px)"}}>
+          <button onClick={()=>setRunning(r=>!r)} style={{flex:1,padding:"clamp(12px,2vw,16px)",fontFamily:font,fontSize:"clamp(14px,2.2vw,18px)",letterSpacing:3,fontWeight:"bold",border:`2px solid ${color}`,background:`${color}22`,color,cursor:"pointer",boxShadow:`0 0 18px ${color}55,inset 0 0 10px ${color}11`,textShadow:`0 0 10px ${color}`,transition:"all 0.2s"}}>
+            {running?"[ PAUSE ]":timeLeft<getDuration(modeIdx)?"[ RESUME ]":"[ EXECUTE ]"}
+          </button>
+          <button onClick={reset} style={{padding:"clamp(12px,2vw,16px) clamp(14px,2.5vw,22px)",fontFamily:font,fontSize:"clamp(13px,1.8vw,16px)",fontWeight:"bold",letterSpacing:2,border:"1px solid #333355",background:"transparent",color:"#9090bb",cursor:"pointer"}}>RST</button>
+          <button onClick={()=>setShowSettings(s=>!s)} style={{padding:"clamp(12px,2vw,16px) clamp(10px,2vw,16px)",fontFamily:font,fontSize:"clamp(13px,1.8vw,16px)",border:`1px solid ${color}44`,background:showSettings?`${color}22`:"transparent",color,cursor:"pointer"}}>⚙</button>
+        </div>
+
+        {showSettings&&(
+          <div style={{border:`1px solid ${color}33`,background:"rgba(4,4,20,0.92)",padding:"clamp(10px,2vw,16px)",marginBottom:"clamp(10px,1.8vw,16px)"}}>
+            <div style={{fontSize:"clamp(9px,1.1vw,11px)",color:muted,letterSpacing:3,marginBottom:8}}>// FOCUS DURATION</div>
+            <div style={{display:"flex",gap:6,marginBottom:14}}>
+              {FOCUS_OPTIONS.map(opt=>(
+                <button key={opt.value} onClick={()=>handleFocusChange(opt.value)} style={{padding:"5px 16px",fontFamily:font,fontSize:"clamp(10px,1.3vw,12px)",fontWeight:"bold",border:`1px solid ${focusDuration===opt.value?color:"#222240"}`,background:focusDuration===opt.value?`${color}22`:"transparent",color:focusDuration===opt.value?color:muted,cursor:"pointer",textShadow:focusDuration===opt.value?`0 0 6px ${color}`:"none"}}>{opt.label}</button>
+              ))}
+            </div>
+            <div style={{fontSize:"clamp(9px,1.1vw,11px)",color:muted,letterSpacing:3,marginBottom:10}}>// THEME</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>
+              {THEMES.map(th=>(
+                <button key={th.key} onClick={()=>setThemeKey(th.key)} style={{padding:"5px 10px",fontFamily:font,fontSize:"clamp(9px,1.2vw,11px)",fontWeight:"bold",border:`1px solid ${themeKey===th.key?th.modes[0]:"#222240"}`,background:themeKey===th.key?`${th.modes[0]}22`:"transparent",color:themeKey===th.key?th.modes[0]:muted,cursor:"pointer",textShadow:themeKey===th.key?`0 0 6px ${th.modes[0]}`:"none"}}>
+                  <span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:th.modes[0],marginRight:5,boxShadow:`0 0 5px ${th.modes[0]}`}}/>
+                  {th.label.toUpperCase()}
+                </button>
+              ))}
+            </div>
+            <div style={{fontSize:"clamp(9px,1.1vw,11px)",color:muted,letterSpacing:3,marginBottom:10}}>// BACKGROUND</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>
+              {BG_STYLES.map(bg=>(
+                <button key={bg.key} onClick={()=>setBgStyle(bg.key)} style={{padding:"5px 10px",fontFamily:font,fontSize:"clamp(9px,1.2vw,11px)",fontWeight:"bold",border:`1px solid ${bgStyle===bg.key?color:"#222240"}`,background:bgStyle===bg.key?`${color}22`:"transparent",color:bgStyle===bg.key?color:muted,cursor:"pointer"}}>{bg.label.toUpperCase()}</button>
+              ))}
+            </div>
+            <div style={{fontSize:"clamp(9px,1.1vw,11px)",color:muted,letterSpacing:3,marginBottom:8}}>// ALARM</div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {TONES.map(t=>(
+                <button key={t.key} onClick={()=>{setTone(t.key);playTone(t.key);}} style={{padding:"5px 12px",fontFamily:font,fontSize:"clamp(10px,1.3vw,12px)",fontWeight:"bold",border:`1px solid ${tone===t.key?color:"#222240"}`,background:tone===t.key?`${color}22`:"transparent",color:tone===t.key?color:muted,cursor:"pointer"}}>{t.label}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"clamp(6px,1vw,10px)",marginBottom:"clamp(10px,1.8vw,16px)"}}>
+          {[{label:"TODAY",value:todayCount},{label:"STREAK",value:streak>0?`${streak}D`:"--"},{label:"SESSION",value:pomCount}].map(s=>(
+            <div key={s.label} style={{border:`1px solid ${color}33`,background:"rgba(0,0,20,0.6)",padding:"clamp(8px,1.4vw,12px) 6px",textAlign:"center"}}>
+              <div style={{fontSize:"clamp(9px,1.1vw,11px)",color:muted,letterSpacing:2,marginBottom:4}}>{s.label}</div>
+              <div style={{fontSize:"clamp(20px,3.5vw,26px)",fontWeight:"bold",color,textShadow:`0 0 8px ${color}`}}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{border:`1px solid ${color}22`,background:"rgba(4,4,20,0.8)",marginBottom:"clamp(10px,1.8vw,16px)"}}>
+          <VerseDisplay verseIdx={verseIdx} accentColor={color} mutedColor={muted}/>
+        </div>
+
+        {recentWork.length>0&&(
+          <div>
+            <div style={{fontSize:"clamp(9px,1.1vw,11px)",color:muted,letterSpacing:3,marginBottom:8}}>// SESSION_LOG</div>
+            <div style={{display:"flex",flexDirection:"column",gap:5}}>
+              {recentWork.map((s,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"clamp(6px,1vw,9px) 12px",border:"1px solid #111130",background:"rgba(0,0,16,0.6)"}}>
+                  <div style={{width:7,height:7,background:color,boxShadow:`0 0 6px ${color}`,flexShrink:0}}/>
+                  <span style={{fontSize:"clamp(11px,1.5vw,13px)",color:"#a0a0cc",flex:1}}>{s.task||"untitled.exe"}</span>
+                  <span style={{fontSize:"clamp(10px,1.3vw,12px)",color:muted}}>{new Date(s.ts).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      <style>{`input::placeholder{color:#444466;}input:focus{border-color:${color}!important;box-shadow:0 0 12px ${color}55;}*{box-sizing:border-box;}`}</style>
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+</script>
 </body>
 </html>
